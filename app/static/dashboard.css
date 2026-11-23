@@ -114,15 +114,16 @@
     overflow: hidden;
     white-space: nowrap;
 }
-.dashboard-update-message.is-error {
+.dashboard-update-message.is-updating, .dashboard-update-message.is-error {
     position: static;
     width: auto;
     height: auto;
-    margin-top: .75rem;
+    margin: .75rem 0 0;
     clip-path: none;
-    color: var(--bs-danger-text-emphasis);
     white-space: normal;
 }
+.dashboard-update-message.is-updating { color: var(--muted); }
+.dashboard-update-message.is-error { color: var(--bs-danger-text-emphasis); }
 .dashboard-results { margin-top: 1rem; }
 .dashboard-results[aria-busy="true"] { opacity: .66; }
 .dashboard-results .metric-card { min-height: 7.25rem; padding: .95rem 1.12rem; }

@@ -85,11 +85,12 @@
         </fieldset>
         <div class="header-actions">
             <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}" data-dashboard-clear>Clear filters</a>
-            <button class="btn btn-primary" type="submit">Apply filters</button>
+            <noscript><button class="btn btn-primary" type="submit">Update results</button></noscript>
         </div>
     </div>
 </form>
 <p class="dashboard-update-message" role="status" data-dashboard-message></p>
+<button class="btn btn-outline-secondary btn-sm mt-2" type="button" data-dashboard-retry hidden>Retry</button>
 {% include "dashboard_insights.html" %}
 </div>
 <script src="{{ url_for('static', path='dashboard.js') }}" defer></script>

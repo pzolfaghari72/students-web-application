@@ -4,9 +4,8 @@
 
     const dashboard = form.closest(".dashboard");
     const search = form.elements.namedItem("q");
-    const applyButton = form.querySelector('button[type="submit"]');
-    const applyLabel = applyButton.textContent;
     const message = dashboard.querySelector("[data-dashboard-message]");
+    const retryButton = dashboard.querySelector("[data-dashboard-retry]");
     const slicers = [...form.querySelectorAll("[data-dashboard-slicer]")];
     const facetOptions = form.querySelectorAll("[data-facet-option]");
     const number = new Intl.NumberFormat("en-US");
@@ -50,8 +49,9 @@
 
         const results = dashboard.querySelector("[data-dashboard-results]");
         results.setAttribute("aria-busy", "true");
-        applyButton.textContent = "Updating…";
+        retryButton.hidden = true;
         message.classList.remove("is-error");
+        message.classList.add("is-updating");
         message.textContent = "Updating dashboard.";
         const query = filterParameters();
         const endpoint = new URL(form.dataset.resultsUrl);
@@ -87,13 +87,14 @@
             if (pendingRequest === controller && (timedOut || !controller.signal.aborted)) {
                 message.classList.add("is-error");
                 const reason = timedOut ? "The dashboard update timed out." : "The dashboard could not update.";
-                message.textContent = `${reason} The previous results are still displayed. Try Apply filters again.`;
+                message.textContent = `${reason} The previous results are still displayed.`;
+                retryButton.hidden = false;
             }
         } finally {
             clearTimeout(deadline);
             if (pendingRequest === controller) {
                 results.setAttribute("aria-busy", "false");
-                applyButton.textContent = applyLabel;
+                message.classList.remove("is-updating");
                 pendingRequest = null;
             }
         }
@@ -152,6 +153,7 @@
         event.preventDefault();
         updateDashboard();
     });
+    retryButton.addEventListener("click", updateDashboard);
     form.addEventListener("change", (event) => {
         if (event.target.type !== "radio") return;
         updateSlicerLabels();
@@ -161,6 +163,11 @@
         clearTimeout(searchTimer);
         pendingRequest?.abort();
         searchTimer = setTimeout(updateDashboard, 350);
+    });
+    search.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" || event.isComposing) return;
+        event.preventDefault();
+        updateDashboard();
     });
 
     dashboard.addEventListener("click", (event) => {

@@ -2,13 +2,33 @@
 
 A local FastAPI application for the existing `Students` SQL Server database. The application opens at sign-in. All student and reference records come from SQL Server.
 
-- **Dashboard** filters student counts, enrollment charts, and matching records by student search, status, degree, and enrollment term. Each slicer shows how many students match the other filters.
+- **Dashboard** updates student counts, enrollment charts, and matching records as you search or change the status, degree, or enrollment term filters. Each slicer shows how many students match the other filters.
 - **Students** combines a management form and a searchable, paginated table ordered by newest student ID. Administrators can insert, update, or confirm deletion. Clear returns to a blank form.
 - **Applicants** provides a searchable, paginated admissions table ordered by applicant ID, with administrator controls to insert, update, and delete records.
 - **Courses, Course Offerings, Course Enrollments, Terms, and Departments** have searchable, paginated tables and validated administrator forms. Search Course Enrollments by enrollment, student, or offering ID, or by grade.
 - **Reference tables** contains Class Standings, Degrees, Degree Levels, Degree Types, Degree Requirements, Grades, and Sessions. The database enforces existing relationships when a record is deleted.
 - **My Panel** provides profile details, a picture, password changes, and browser display preferences.
 - **Manage users** lets administrators create accounts, reset passwords, assign roles, and activate or deactivate accounts. An administrator's own role and account status are protected.
+
+## Screenshots
+
+These screenshots show the app populated with sample records.
+
+### Dashboard
+
+![Dashboard with student slicers, enrollment charts, and matching students](docs/screenshots/dashboard.png)
+
+### Student management
+
+![Student editor with Insert, Update, Delete, and Clear controls above the student records table](docs/screenshots/students.png)
+
+### Course offerings
+
+![Course offering editor and searchable records table](docs/screenshots/course-offerings.png)
+
+### My Panel
+
+![My Panel in dark mode with profile, password, and display settings](docs/screenshots/my-panel.png)
 
 ## Application roles
 
@@ -80,6 +100,7 @@ app/
   preferences.py Browser preference settings
   templates/    Jinja2 layout and student views
   static/       Application CSS
+docs/screenshots/ App screenshots with sample data
 .env.example
 .gitignore
 requirements.txt
