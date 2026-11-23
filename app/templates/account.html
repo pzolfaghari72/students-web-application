@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "macros.html" import avatar, profile_fields, password_fields with context %}
+{% block title %}My Panel{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>My Panel</h1>
+        <p>Manage your account, profile picture, and display preferences.</p>
+    </div>
+</header>
+
+{% if notice %}<div class="alert alert-success settings-panel" role="status">{{ notice }}</div>{% endif %}
+<section class="panel settings-panel profile-summary" aria-label="Account information">
+    {{ avatar(current_user, 'avatar-large') }}
+    <div>
+        <h2>{{ current_user.first_name }} {{ current_user.last_name }}</h2>
+        <p>{{ current_user.role }} · {{ 'Active' if current_user.is_active else 'Inactive' }}</p>
+        <p>Account {{ current_user.user_id }} · Created {{ current_user.created_at.date() }}</p>
+    </div>
+</section>
+
+<form class="panel settings-panel" method="post" action="{{ url_for('update_profile') }}">
+    <fieldset class="form-section">
+        <legend>Personal information</legend>
+        {% if errors.get('profile') %}<p class="alert alert-danger" role="alert">{{ errors.profile }}</p>{% endif %}
+        {% set profile = values if values is not none else {
+            'first_name': current_user.first_name, 'last_name': current_user.last_name,
+            'username': current_user.username, 'email': current_user.email
+        } %}
+        {{ profile_fields(profile, errors) }}
+        <div class="mt-3">
+            <label class="form-label" for="profile-password">Current password</label>
+            <input class="form-control" id="profile-password" name="current_password" type="password"
+                autocomplete="current-password" maxlength="128" aria-describedby="profile-password-help">
+            <p class="form-text mb-0" id="profile-password-help">Required to change your username or email.</p>
+        </div>
+    </fieldset>
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Save profile</button>
+    </div>
+</form>
+
+<form class="panel settings-panel" method="post" action="{{ url_for('update_password') }}">
+    <fieldset class="form-section">
+        <legend>Change password</legend>
+        {% if errors.get('password') %}<p class="alert alert-danger" role="alert">{{ errors.password }}</p>{% endif %}
+        <div class="mb-3">
+            <label class="form-label" for="current-password">Current password</label>
+            <input class="form-control" id="current-password" name="current_password" type="password"
+                autocomplete="current-password" maxlength="128" required>
+        </div>
+        {{ password_fields() }}
+    </fieldset>
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Change password</button>
+    </div>
+</form>
+
+<section class="panel settings-panel" aria-labelledby="picture-heading">
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('update_picture') }}">
+        <fieldset class="form-section">
+            <legend id="picture-heading">Profile picture</legend>
+            {% if errors.get('photo') %}<p class="alert alert-danger" role="alert">{{ errors.photo }}</p>{% endif %}
+            <label class="form-label" for="picture">Image file</label>
+            <input class="form-control" id="picture" name="picture" type="file" accept="image/jpeg,image/png,image/webp"
+                   aria-describedby="picture-help" required>
+            <p class="form-text mb-0" id="picture-help">JPEG, PNG, or WebP. Up to 2 MB.</p>
+        </fieldset>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Upload picture</button>
+            {% if current_user.has_picture %}
+                <button class="btn btn-outline-secondary" type="submit" form="remove-picture">Remove picture</button>
+            {% endif %}
+        </div>
+    </form>
+    {% if current_user.has_picture %}
+        <form id="remove-picture" method="post" action="{{ url_for('remove_picture') }}"></form>
+    {% endif %}
+</section>
+
+<form class="panel settings-panel" method="post" action="{{ url_for('save_preferences') }}">
+    <fieldset class="form-section">
+        <legend>Display preferences</legend>
+        {% if errors.get('preferences') %}<p class="alert alert-danger" role="alert">{{ errors.preferences }}</p>{% endif %}
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="theme">Theme</label>
+                <select class="form-select" id="theme" name="theme">
+                    {% for key, label in themes.items() %}
+                        <option value="{{ key }}"{% if key == preferences.theme %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="page_size">Students per page</label>
+                <select class="form-select" id="page_size" name="page_size">
+                    {% for size in page_sizes %}
+                        <option value="{{ size }}"{% if size == preferences.page_size %} selected{% endif %}>{{ size }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </fieldset>
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Save preferences</button>
+    </div>
+</form>
+{% endblock %}

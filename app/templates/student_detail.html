@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}Student {{ student.student_id }}{% endblock %}
+{% block content %}
+<nav class="back-link" aria-label="Breadcrumb">
+    <a href="{{ url_for('students_list') }}">Students</a>
+</nav>
+<header class="page-header">
+    <div>
+        <h1>{{ student.first_name }}{% if student.middle_name %} {{ student.middle_name }}{% endif %} {{ student.last_name }}</h1>
+        <div class="record-meta"><span>Student ID {{ student.student_id }}</span>{{ status_badge(student.student_status) }}</div>
+    </div>
+    {% if current_user.role == 'Admin' %}<a class="btn btn-primary" href="{{ url_for('student_edit', student_id=student.student_id) }}">Edit student</a>{% endif %}
+</header>
+
+{% if notice %}<div class="alert alert-success" role="status">{{ notice }}</div>{% endif %}
+
+<div class="detail-grid">
+    <section class="panel detail-panel" aria-labelledby="academic-heading">
+        <h2 id="academic-heading">Academic information</h2>
+        <dl>
+            <dt>Degree</dt><dd>{{ degree_name or '—' }}</dd>
+            <dt>Class standing</dt><dd>{{ standing_name or '—' }}</dd>
+            <dt>Enrollment term</dt><dd>{{ student.enrollment_term }}</dd>
+        </dl>
+    </section>
+    <section class="panel detail-panel" aria-labelledby="personal-heading">
+        <h2 id="personal-heading">Personal information</h2>
+        <dl>
+            <dt>First name</dt><dd>{{ student.first_name }}</dd>
+            <dt>Middle name</dt><dd>{{ student.middle_name or '—' }}</dd>
+            <dt>Last name</dt><dd>{{ student.last_name }}</dd>
+            <dt>Date of birth</dt><dd>{{ student.date_of_birth.strftime('%b %d, %Y') }}</dd>
+            <dt>Gender code</dt><dd>{{ student.gender }}</dd>
+        </dl>
+    </section>
+    <section class="panel detail-panel" aria-labelledby="contact-heading">
+        <h2 id="contact-heading">Contact information</h2>
+        <dl>
+            <dt>Email address</dt><dd>{{ student.email }}</dd>
+            <dt>Telephone</dt><dd>{{ student.telephone }}</dd>
+            <dt>Street address</dt><dd>{{ student.street_address }}</dd>
+            <dt>City</dt><dd>{{ student.city }}</dd>
+            <dt>State</dt><dd>{{ student.state }}</dd>
+            <dt>ZIP code</dt><dd>{{ student.zip_code }}</dd>
+        </dl>
+    </section>
+</div>
+{% endblock %}

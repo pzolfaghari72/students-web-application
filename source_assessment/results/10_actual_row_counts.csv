@@ -1,0 +1,16 @@
+﻿SchemaName,TableName,ActualRowCount
+dbo,CourseEnrollments,3724654
+dbo,Applicants,600000
+dbo,StudentProfiles,119463
+dbo,Students,119463
+dbo,CourseOfferings,59279
+dbo,DegreeRequirements,364
+dbo,Courses,180
+dbo,Terms,33
+dbo,Degrees,20
+dbo,Departments,11
+dbo,Grades,6
+dbo,ClassStandings,6
+dbo,DegreeTypes,3
+dbo,Sessions,3
+dbo,DegreeLevels,2

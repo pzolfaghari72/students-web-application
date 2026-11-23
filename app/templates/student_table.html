@@ -1,0 +1,132 @@
+{% from "macros.html" import status_badge %}
+{% set table_url = url_for('student_edit', student_id=student_id) if management and student_id is not none else url_for('students_list') %}
+{% set degree_query = degree if degree is not none else '' %}
+{% set page_link = table_url.include_query_params(q=q, status=status, degree=degree_query, term=term) %}
+<form class="panel filter-panel" action="{{ table_url }}#student-table" method="get" role="search">
+    <div class="filter-fields">
+        <div>
+            <label class="form-label" for="q">Search</label>
+            <input class="form-control" type="search" id="q" name="q" maxlength="100" value="{{ q }}"
+                   placeholder="Student ID, first name, last name or email">
+        </div>
+        <div>
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">All statuses</option>
+                {% for code, label in statuses %}
+                    <option value="{{ code }}"{% if status|upper == code|upper %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="degree">Degree</label>
+            <select class="form-select" id="degree" name="degree">
+                <option value="">All degrees</option>
+                {% for key, name in degrees %}
+                    <option value="{{ key }}"{% if key == degree %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="term">Enrollment term</label>
+            <select class="form-select" id="term" name="term">
+                <option value="">All terms</option>
+                {% for code in terms %}
+                    <option value="{{ code }}"{% if code|upper == term|upper %} selected{% endif %}>{{ code }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary" type="submit">Search</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('students_list') }}">Clear</a>
+        </div>
+    </div>
+</form>
+
+<section class="panel records-panel" id="student-table" aria-label="Student records">
+    <div class="records-summary">
+        {% if students %}
+            Showing <strong>{{ "{:,}".format(first) }}–{{ "{:,}".format(last) }}</strong>
+            of <strong>{{ "{:,}".format(total) }}</strong> students
+        {% else %}
+            <strong>0 students</strong>
+        {% endif %}
+    </div>
+    {% if students %}
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Student records table">
+            <table class="table student-table{% if management %} management-table{% endif %} align-middle mb-0">
+                <thead>
+                    <tr>
+                        {% if management %}
+                            <th scope="col">Student ID</th>
+                            {% for field in fields.values() %}<th scope="col">{{ field.title }}</th>{% endfor %}
+                        {% else %}
+                        <th scope="col">Student</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Degree</th>
+                        <th scope="col">Enrollment term</th>
+                        <th scope="col">Status</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr{% if management %} data-select-record{% if student.student_id == student_id %} class="record-selected"{% endif %}{% endif %}>
+                            {% if management %}
+                            <th scope="row">
+                                <a class="student-link" data-record-link href="{{ url_for('student_edit', student_id=student.student_id).include_query_params(q=q, status=status, degree=degree_query, term=term, page=page) }}#student-form"
+                                   aria-label="Select student {{ student.student_id }}"{% if student.student_id == student_id %} aria-current="true"{% endif %}>
+                                    {{ student.student_id }}
+                                    <span class="record-select-label">{{ 'Selected' if student.student_id == student_id else 'Select' }}</span>
+                                </a>
+                            </th>
+                            {% for key in fields %}
+                                <td>
+                                    {% if key == 'student_status' %}{{ status_badge(student.student_status) }} <span class="student-code">{{ student.student_status }}</span>
+                                    {% elif key == 'degree_id' %}{{ student.degree_name or '—' }} <span class="student-code">({{ student.degree_id }})</span>
+                                    {% else %}{{ student[key] if student[key] is not none and student[key] != '' else '—' }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            {% else %}
+                            <th scope="row">
+                                <a class="student-link" href="{{ url_for('student_detail', student_id=student.student_id) }}">
+                                    {{ student.first_name }} {{ student.last_name }}
+                                </a>
+                                <span class="student-id">ID {{ student.student_id }}</span>
+                            </th>
+                            <td class="text-break">{{ student.email }}</td>
+                            <td>{{ student.degree_name or '—' }}</td>
+                            <td>{{ student.enrollment_term }}</td>
+                            <td>{{ status_badge(student.student_status) }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if pages > 1 %}
+            <nav class="records-pagination" aria-label="Student pages">
+                <span>Page {{ "{:,}".format(page) }} of {{ "{:,}".format(pages) }}</span>
+                <div class="pagination-links">
+                    {% if page > 1 %}
+                        <a class="btn btn-outline-secondary" href="{{ page_link.include_query_params(page=1) }}#student-table">First</a>
+                        <a class="btn btn-outline-secondary" rel="prev" href="{{ page_link.include_query_params(page=page - 1) }}#student-table">Previous</a>
+                    {% endif %}
+                    {% if page < pages %}
+                        <a class="btn btn-outline-secondary" rel="next" href="{{ page_link.include_query_params(page=page + 1) }}#student-table">Next</a>
+                        <a class="btn btn-outline-secondary" href="{{ page_link.include_query_params(page=pages) }}#student-table">Last</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <h2>No students found</h2>
+            {% if q or status or term or degree is not none %}
+                <p>Try a different search or clear the filters.</p>
+                <a class="btn btn-outline-secondary" href="{{ url_for('students_list') }}">Clear filters</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>

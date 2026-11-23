@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "macros.html" import form_field %}
+{% set editing = student_id is not none %}
+{% set heading = 'Student management' %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<nav class="back-link" aria-label="Breadcrumb">
+    {% if editing %}
+        <a href="{{ url_for('student_detail', student_id=student_id) }}">Student {{ student_id }}</a>
+    {% else %}
+        <a href="{{ url_for('students_list') }}">Students</a>
+    {% endif %}
+</nav>
+<header class="page-header">
+    <div>
+        <h1>{{ heading }}</h1>
+        {% if editing %}
+            <p>Editing student ID {{ student_id }}</p>
+        {% else %}
+            <p>Select a row in the table to update or delete a student.</p>
+        {% endif %}
+    </div>
+    {% if editing %}<a class="btn btn-outline-secondary" href="{{ url_for('student_detail', student_id=student_id) }}">View details</a>{% endif %}
+</header>
+
+{% if notice %}<div class="alert alert-success" role="status">{{ notice }}</div>{% endif %}
+{% if message or errors %}
+    <div class="alert alert-danger" role="alert">{{ message or 'Review the highlighted fields and try again.' }}</div>
+{% endif %}
+<form class="panel student-form" id="student-form" method="post"
+      action="{{ url_for('student_update', student_id=student_id) if editing else url_for('student_create') }}">
+    {% if editing %}<input type="hidden" name="revision" value="{{ revision }}">{% endif %}
+    <fieldset class="form-section">
+        <legend>Personal information</legend>
+        <div class="row g-3">
+            {{ form_field('first_name', fields, lengths, options, values, errors) }}
+            {{ form_field('middle_name', fields, lengths, options, values, errors) }}
+            {{ form_field('last_name', fields, lengths, options, values, errors) }}
+            {{ form_field('date_of_birth', fields, lengths, options, values, errors, type='date') }}
+            {{ form_field('gender', fields, lengths, options, values, errors) }}
+        </div>
+    </fieldset>
+    <fieldset class="form-section">
+        <legend>Contact information</legend>
+        <div class="row g-3">
+            {{ form_field('email', fields, lengths, options, values, errors, type='email', width=6) }}
+            {{ form_field('telephone', fields, lengths, options, values, errors, type='tel', width=6) }}
+            {{ form_field('street_address', fields, lengths, options, values, errors, width=12) }}
+            {{ form_field('city', fields, lengths, options, values, errors, width=6) }}
+            {{ form_field('state', fields, lengths, options, values, errors, width=3) }}
+            {{ form_field('zip_code', fields, lengths, options, values, errors, width=3) }}
+        </div>
+    </fieldset>
+    <fieldset class="form-section">
+        <legend>Academic information</legend>
+        <div class="row g-3">
+            {{ form_field('degree_id', fields, lengths, options, values, errors, width=6) }}
+            {{ form_field('class_standing_code', fields, lengths, options, values, errors, width=6) }}
+            {{ form_field('enrollment_term', fields, lengths, options, values, errors, width=6) }}
+            {{ form_field('student_status', fields, lengths, options, values, errors, width=6) }}
+        </div>
+    </fieldset>
+    <div class="form-actions">
+        <button class="btn btn-success" type="{{ 'button' if editing else 'submit' }}"{% if editing %} disabled{% endif %}>Insert</button>
+        <button class="btn btn-warning" type="{{ 'submit' if editing else 'button' }}"{% if not editing %} disabled{% endif %}>Update</button>
+        {% if editing %}
+            <a class="btn btn-danger" href="{{ url_for('confirm_student_delete', student_id=student_id) }}">Delete</a>
+        {% else %}
+            <button class="btn btn-danger" type="button" disabled>Delete</button>
+        {% endif %}
+        <button class="btn btn-dark" type="submit" form="clear-record">Clear</button>
+    </div>
+</form>
+<form id="clear-record" method="get" action="{{ url_for('students_list') }}" hidden>
+    <input type="hidden" name="q" value="{{ q }}">
+    <input type="hidden" name="status" value="{{ status }}">
+    <input type="hidden" name="degree" value="{{ degree if degree is not none else '' }}">
+    <input type="hidden" name="term" value="{{ term }}">
+    <input type="hidden" name="page" value="{{ page }}">
+</form>
+<div class="management-records">
+    <h2>Student records</h2>
+    {% include "student_table.html" %}
+</div>
+<script src="{{ url_for('static', path='record-selection.js') }}" defer></script>
+{% endblock %}

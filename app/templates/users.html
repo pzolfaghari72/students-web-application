@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "macros.html" import profile_fields, password_fields, pagination %}
+{% block title %}Manage users{% endblock %}
+{% block content %}
+{% set list_url = url_for('manage_users') %}
+{% set profile = values if values is not none else {
+    'first_name': selected.first_name if selected else '',
+    'last_name': selected.last_name if selected else '',
+    'email': selected.email if selected else '',
+    'username': selected.username if selected else ''
+} %}
+{% set role = values.role if values is not none else selected.role if selected else 'User' %}
+{% set active = values.is_active if values is not none else selected.is_active if selected else true %}
+<header class="page-header">
+    <div><h1>Manage users</h1></div>
+</header>
+{% if saved %}<div class="alert alert-success" role="status">User account saved.</div>{% endif %}
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+<form class="panel student-form" id="user-form" method="post"
+      action="{{ list_url.include_query_params(user_id=selected.user_id) if selected else list_url }}">
+    <fieldset class="form-section">
+        <legend>{{ 'Edit account' if selected else 'New account' }}</legend>
+        {{ profile_fields(profile, username_autocomplete='off') }}
+        <div class="row g-3 mt-1">
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="role">Role</label>
+                <select class="form-select" id="role" name="role">
+                    {% for choice in roles %}<option value="{{ choice }}"{% if choice == role %} selected{% endif %}>{{ choice }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="is_active">Account status</label>
+                <select class="form-select" id="is_active" name="is_active">
+                    <option value="1"{% if active %} selected{% endif %}>Active</option>
+                    <option value="0"{% if not active %} selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="form-section">
+        <legend>{{ 'Reset password' if selected else 'Set password' }}</legend>
+        {% if selected %}<p class="text-body-secondary">Leave both fields blank to keep the current password.</p>{% endif %}
+        {{ password_fields(required=not selected) }}
+    </fieldset>
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">{{ 'Save account' if selected else 'Create account' }}</button>
+        <button class="btn btn-dark" type="submit" form="clear-record">Clear</button>
+    </div>
+</form>
+<form id="clear-record" method="get" action="{{ list_url }}" hidden>
+    <input type="hidden" name="q" value="{{ q }}">
+    <input type="hidden" name="page" value="{{ page }}">
+</form>
+<section class="management-records" aria-labelledby="accounts-heading">
+    <h2 id="accounts-heading">Application accounts</h2>
+    <form class="panel compact-search" action="{{ list_url }}#accounts-heading" method="get" role="search">
+        <label class="form-label" for="q">Search users</label>
+        <input class="form-control" id="q" name="q" type="search" maxlength="100" value="{{ q }}">
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a class="btn btn-outline-secondary" href="{{ list_url }}#accounts-heading">Clear search</a>
+    </form>
+    <div class="panel">
+        <div class="records-summary"><strong>{{ "{:,}".format(total) }}</strong> accounts</div>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Application accounts table">
+            <table class="table summary-table align-middle mb-0">
+                <thead><tr><th scope="col">Username</th><th scope="col">Full name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Created</th></tr></thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr{% if selected and selected.user_id == user.user_id %} class="record-selected"{% endif %}>
+                            <th scope="row"><a class="student-link"
+                                href="{{ url_for('user_panel') if user.user_id == current_user.user_id else list_url.include_query_params(user_id=user.user_id, q=q, page=page) ~ '#user-form' }}">{{ user.username }}</a></th>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.email or '—' }}</td>
+                            <td>{{ user.role }}</td>
+                            <td>{{ 'Active' if user.is_active else 'Inactive' }}</td>
+                            <td>{{ user.created_at.date() }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6">No accounts found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {{ pagination(list_url.include_query_params(q=q), page, pages) }}
+    </div>
+</section>
+{% endblock %}

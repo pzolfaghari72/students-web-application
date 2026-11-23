@@ -1,0 +1,7 @@
+﻿SchemaName,TableName,ColumnName,DataType,IdentitySeed,IdentityIncrement,IdentityLastValue
+dbo,Applicants,ApplicantId,int,1,1,750022
+dbo,CourseEnrollments,CourseEnrollmentId,int,1,1,3724654
+dbo,CourseOfferings,CourseOfferingId,int,1,1,59280
+dbo,DegreeRequirements,RequirementId,int,1,1,365
+dbo,Degrees,DegreeId,int,1,1,20
+dbo,Students,StudentId,int,10000,1,119464

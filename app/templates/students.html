@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>Students</h1>
+        <p>Search student records by ID, name, or email.</p>
+    </div>
+</header>
+{% include "student_table.html" %}
+{% endblock %}

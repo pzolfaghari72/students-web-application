@@ -1,0 +1,12 @@
+﻿SchemaName,TableName,ColumnName,TotalRows,NullCount,DistinctNonNullValues,DuplicateExcessRows
+dbo,Applicants,ApplicantId,600000,0,600000,0
+dbo,CourseEnrollments,CourseOfferingId,3724654,0,59279,3665375
+dbo,CourseEnrollments,StudentId,3724654,0,119463,3605191
+dbo,CourseEnrollments,CourseEnrollmentId,3724654,0,3724654,0
+dbo,CourseOfferings,CourseOfferingId,59279,0,59279,0
+dbo,DegreeRequirements,DegreeId,364,0,9,355
+dbo,DegreeRequirements,RequirementId,364,0,364,0
+dbo,Degrees,DegreeId,20,0,20,0
+dbo,StudentProfiles,ProfileId,119463,0,11,119452
+dbo,StudentProfiles,StudentId,119463,0,119463,0
+dbo,Students,StudentId,119463,0,119463,0

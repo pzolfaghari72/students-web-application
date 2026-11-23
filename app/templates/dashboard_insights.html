@@ -1,0 +1,135 @@
+{% from "macros.html" import status_badge %}
+<div class="dashboard-results" data-dashboard-results data-result-count="{{ counts.total }}" aria-busy="false">
+    <script type="application/json" data-dashboard-facets>{{ facets|tojson }}</script>
+    <div class="metric-grid" aria-label="Student totals">
+        {% for key, label, code in [
+            ('total', 'Total students', ''), ('active', 'Active students', 'A'),
+            ('graduated', 'Graduated students', 'G'), ('withdrawn', 'Withdrawn students', 'W')
+        ] %}
+            {% set tag = 'a' if counts[key] else 'div' %}
+            <{{ tag }} class="metric-card metric-{{ key }}"
+                {% if counts[key] %}href="{{ students_url.include_query_params(status=code) if code else students_url }}"{% endif %}>
+                <span class="metric-label">{{ label }}</span>
+                <strong class="metric-number">{{ "{:,}".format(counts[key]) }}</strong>
+            </{{ tag }}>
+        {% endfor %}
+    </div>
+    {% if counts.total %}
+    <div class="dashboard-chart-grid">
+        <section class="panel dashboard-chart" aria-labelledby="dashboard-trend-title">
+            <header class="dashboard-card-heading">
+                <h2 id="dashboard-trend-title">Enrollment by year</h2>
+                <p>Year of entry into the program</p>
+            </header>
+            {% if trend %}
+                <div class="dashboard-trend">
+                    <div class="dashboard-trend-axis" aria-hidden="true">
+                        {% for tick in trend_ticks %}
+                            <span>{{ ("{:g}k".format(tick / 1000)) if tick >= 1000 else tick }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="dashboard-trend-scroll" tabindex="0" role="region" aria-label="Enrollment by year chart">
+                        <div class="dashboard-trend-columns" style="--year-count: {{ trend|length }}">
+                            {% for bar in trend %}
+                                <div class="dashboard-trend-column">
+                                    <div class="dashboard-trend-track" tabindex="0" role="img"
+                                         aria-label="{{ bar.year }}, {{ '{:,}'.format(bar.count) }} {{ 'student' if bar.count == 1 else 'students' }}">
+                                        <span class="dashboard-trend-bar" style="--bar-height: {{ bar.height }}%" aria-hidden="true"></span>
+                                        <span class="dashboard-trend-value" aria-hidden="true">{{ "{:,}".format(bar.count) }}</span>
+                                    </div>
+                                    <span class="dashboard-trend-year" aria-hidden="true">{{ bar.year }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="dashboard-empty">No enrollment years found.</p>
+            {% endif %}
+        </section>
+
+        <section class="panel dashboard-chart" aria-labelledby="dashboard-status-title">
+            <header class="dashboard-card-heading">
+                <h2 id="dashboard-status-title">Status breakdown</h2>
+            </header>
+            <div class="dashboard-status-chart">
+                <div class="dashboard-donut" aria-hidden="true" style="--status-stops: {{ status_ring }}">
+                    <span><strong>{{ "{:,}".format(counts.total) }}</strong> {{ 'student' if counts.total == 1 else 'students' }}</span>
+                </div>
+                <ul class="dashboard-legend">
+                    {% for slice in status_slices %}
+                        <li>
+                            {% set tag = 'a' if slice.code and slice.code|length == 1 else 'span' %}
+                            <{{ tag }} class="dashboard-legend-item"
+                              {% if tag == 'a' %} href="{{ dashboard_url.include_query_params(status=slice.code) }}"
+                                data-dashboard-slice="status" data-slice-value="{{ slice.code }}"{% endif %}>
+                                <span class="dashboard-legend-dot" style="--series-color: var(--chart-{{ slice.tone }})" aria-hidden="true"></span>
+                                <span>{{ slice.label }}</span>
+                                <strong>{{ "{:,}".format(slice.count) }}</strong>
+                                <span class="dashboard-legend-share">{{ "{:g}".format(slice.share) }}%</span>
+                            </{{ tag }}>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section class="panel dashboard-chart" aria-labelledby="dashboard-degree-title">
+            <header class="dashboard-card-heading">
+                <h2 id="dashboard-degree-title">Top degrees by enrollment</h2>
+            </header>
+            {% if top_degrees %}
+                <ul class="dashboard-degree-list">
+                    {% for degree in top_degrees %}
+                        <li>
+                            <a class="dashboard-degree" href="{{ dashboard_url.include_query_params(degree=degree.id) }}"
+                               data-dashboard-slice="degree" data-slice-value="{{ degree.id }}">
+                                <span class="dashboard-degree-label"><span>{{ degree.name }}</span><strong>{{ "{:,}".format(degree.count) }}</strong></span>
+                                <span class="dashboard-degree-track" aria-hidden="true">
+                                    <span style="--bar-width: {{ degree.width }}%"></span>
+                                </span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="dashboard-empty">No degree records found.</p>
+            {% endif %}
+        </section>
+
+        <section class="panel dashboard-chart dashboard-matches" aria-labelledby="dashboard-matches-title">
+            <header class="dashboard-card-heading dashboard-match-heading">
+                <div>
+                    <h2 id="dashboard-matches-title">Matching students</h2>
+                    {% if counts.total > students|length %}<p>Latest {{ students|length }} of {{ "{:,}".format(counts.total) }} matches</p>{% endif %}
+                </div>
+                <a class="btn btn-outline-secondary" href="{{ students_url }}">View all</a>
+            </header>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr><th scope="col">Student</th><th scope="col">Degree</th><th scope="col">Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <th scope="row">
+                                    <a class="student-link" href="{{ url_for('student_detail', student_id=student.student_id) }}">{{ student.first_name }} {{ student.last_name }}</a>
+                                    <span class="student-id">ID {{ student.student_id }}</span>
+                                </th>
+                                <td>{{ student.degree_name or '—' }}</td>
+                                <td>{{ status_badge(student.student_status) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    {% else %}
+        <section class="panel empty-state">
+            <h2>No students match these filters</h2>
+            <p class="mb-0">Try a different search or clear the filters.</p>
+        </section>
+    {% endif %}
+</div>

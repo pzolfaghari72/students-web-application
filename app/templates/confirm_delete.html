@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Confirm deletion{% endblock %}
+{% block content %}
+<dialog open class="panel confirm-panel" aria-labelledby="confirm-heading" aria-describedby="confirm-message">
+    <h1 id="confirm-heading">Delete {{ record_type }}?</h1>
+    <p id="confirm-message">Confirm permanent deletion of <strong>{{ record_label }}</strong>.</p>
+    <form method="post" action="{{ action }}" class="header-actions">
+        {% if revision is defined %}<input type="hidden" name="revision" value="{{ revision }}">{% endif %}
+        <a class="btn btn-outline-secondary" href="{{ cancel }}" autofocus>Cancel</a>
+        <button class="btn btn-danger" name="confirm" value="yes" type="submit">Confirm delete</button>
+    </form>
+</dialog>
+<script src="{{ url_for('static', path='confirm.js') }}" defer></script>
+{% endblock %}

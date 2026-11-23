@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "macros.html" import profile_fields, password_fields %}
+{% block title %}{{ 'Set up administrator' if setup else 'Sign in' }}{% endblock %}
+{% block content %}
+<section class="panel login-card" aria-labelledby="login-heading">
+    <div class="login-brand">
+        <img class="brand-mark" src="{{ url_for('static', path='app-icon.png') }}" alt="" width="36" height="36">
+        <span>{{ app_name }}</span>
+    </div>
+    <h1 id="login-heading">{{ 'Set up administrator' if setup else 'Sign in' }}</h1>
+    {% if setup %}<p class="text-body-secondary">Create the first account for this installation.</p>{% endif %}
+    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+    {% if setup %}
+        <form method="post" action="{{ url_for('create_first_account') }}" class="login-fields">
+            {{ profile_fields(values|default({})) }}
+            {{ password_fields() }}
+            <button class="btn btn-primary" type="submit">Create administrator</button>
+        </form>
+    {% else %}
+        <form method="post" action="{{ url_for('check_login') }}" class="login-fields">
+            <div>
+                <label class="form-label" for="username">Username</label>
+                <input class="form-control" id="username" name="username" value="{{ username|default('') }}"
+                       autocomplete="username" maxlength="64" required autofocus>
+            </div>
+            <div>
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" id="password" name="password" type="password"
+                       autocomplete="current-password" maxlength="128" required>
+            </div>
+            <button class="btn btn-primary" type="submit">Sign in</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

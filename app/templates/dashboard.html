@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% macro slicer(name, label, choices, selected, all_label, available) %}
+    {% set applied = namespace(label=all_label, found=selected is none or selected == '') %}
+    {% for value, text in choices %}
+        {% if selected is not none and selected|string|upper == value|string|upper %}
+            {% set applied.label = text %}
+            {% set applied.found = true %}
+        {% endif %}
+    {% endfor %}
+    <fieldset class="dashboard-slicer">
+        <legend class="form-label" id="slicer-{{ name }}-label">{{ label }}</legend>
+        <details data-dashboard-slicer>
+            <summary aria-labelledby="slicer-{{ name }}-label slicer-{{ name }}-selection">
+                <span id="slicer-{{ name }}-selection" data-slicer-selection>{{ applied.label if applied.found else selected }}</span>
+            </summary>
+            <div class="dashboard-slicer-options">
+                <label class="visually-hidden" for="slicer-{{ name }}-search">Search {{ label|lower }} options</label>
+                <input class="form-control dashboard-option-search" id="slicer-{{ name }}-search" type="search"
+                       placeholder="Find {{ label|lower }}…" autocomplete="off" data-slicer-search hidden>
+                <div class="dashboard-choice-list">
+                    {% for value, text in [('', all_label)] + choices %}
+                        {% set checked = (selected is none and value == '') or selected|string|upper == value|string|upper %}
+                        {% set matches = available.get(value|string|upper, 0) %}
+                        <label class="dashboard-choice" data-slicer-choice data-facet-option>
+                            <input type="radio" name="{{ name }}" value="{{ value }}"
+                                   {% if checked %}checked{% elif value != '' and not matches %}disabled{% endif %}>
+                            <span data-option-label>{{ text }}</span>
+                            <span class="dashboard-facet-count" data-facet-count>{{ "{:,}".format(matches) }}</span>
+                        </label>
+                    {% endfor %}
+                    {% if not applied.found %}
+                        <label class="dashboard-choice" data-slicer-choice data-facet-option>
+                            <input type="radio" name="{{ name }}" value="{{ selected }}" checked>
+                            <span data-option-label>{{ selected }}</span>
+                            <span class="dashboard-facet-count" data-facet-count>0</span>
+                        </label>
+                    {% endif %}
+                    <span class="dashboard-no-options" data-slicer-empty hidden>No matching options.</span>
+                </div>
+            </div>
+        </details>
+    </fieldset>
+{% endmacro %}
+{% block title %}Dashboard{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', path='dashboard.css') }}">{% endblock %}
+{% block content %}
+<div class="dashboard">
+<header class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Student enrollment and status</p>
+    </div>
+    <div class="header-actions">
+        <a class="btn btn-outline-secondary" href="{{ url_for('reference_page', entity='applicants') }}">View applicants</a>
+        {% if current_user.role == 'Admin' %}<a class="btn btn-primary" href="{{ url_for('student_new') }}">Add student</a>{% endif %}
+    </div>
+</header>
+<form class="panel dashboard-filters" method="get" action="{{ url_for('dashboard') }}"
+      aria-label="Dashboard filters" data-dashboard-filters data-results-url="{{ url_for('dashboard_updates') }}">
+    <div class="dashboard-filter-grid">
+        <div>
+            <label class="form-label" for="dashboard-search">Search students</label>
+            <input class="form-control" id="dashboard-search" name="q" type="search" maxlength="100"
+                   placeholder="Student ID, name, or email" autocomplete="off" value="{{ filters.q }}">
+        </div>
+        {{ slicer('degree', 'Degree', degrees, filters.degree, 'All degrees', facets.degree) }}
+        {{ slicer('term', 'Enrollment term', terms, filters.term, 'All terms', facets.term) }}
+    </div>
+    <div class="dashboard-filter-actions">
+        <fieldset class="dashboard-states">
+            <legend class="form-label">Student status</legend>
+            <div class="dashboard-status-chips">
+                {% for code, label in [('', 'All statuses')] + statuses %}
+                    {% set checked = filters.status|upper == code|upper %}
+                    {% set matches = facets.status.get(code|upper, 0) %}
+                    <label class="dashboard-chip" data-facet-option>
+                        <input type="radio" name="status" value="{{ code }}"{% if checked %} checked{% elif code and not matches %} disabled{% endif %}>
+                        <span>
+                            <span>{{ label }}</span>
+                            <span class="dashboard-facet-count" data-facet-count>{{ "{:,}".format(matches) }}</span>
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <div class="header-actions">
+            <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}" data-dashboard-clear>Clear filters</a>
+            <button class="btn btn-primary" type="submit">Apply filters</button>
+        </div>
+    </div>
+</form>
+<p class="dashboard-update-message" role="status" data-dashboard-message></p>
+{% include "dashboard_insights.html" %}
+</div>
+<script src="{{ url_for('static', path='dashboard.js') }}" defer></script>
+{% endblock %}

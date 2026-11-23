@@ -1,0 +1,96 @@
+{% macro status_badge(code) %}
+    {% set tone = {'A': 'active', 'G': 'graduated', 'W': 'withdrawn'}.get(code|upper, 'neutral') %}
+    <span class="status-badge status-{{ tone }}">{{ status_label(code) }}</span>
+{% endmacro %}
+
+{% macro avatar(user, extra='') %}
+    {% if user.has_picture %}
+        <img class="avatar {{ extra }}" src="{{ url_for('profile_picture') }}" alt="">
+    {% else %}
+        <span class="avatar {{ extra }}" aria-hidden="true">{{ user.first_name[:1]|upper }}{{ user.last_name[:1]|upper }}</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro profile_fields(values, errors={}, username_autocomplete='username') %}
+    <div class="row g-3">
+        {% for name, label, kind, maximum, autocomplete in [
+            ('first_name', 'First name', 'text', 64, 'given-name'),
+            ('last_name', 'Last name', 'text', 64, 'family-name'),
+            ('username', 'Username', 'text', 64, username_autocomplete),
+            ('email', 'Email address', 'email', 254, 'email')
+        ] %}
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ name }}">{{ label }}{% if name == 'email' %} <span class="optional">optional</span>{% endif %}</label>
+            <input class="form-control{% if errors.get(name) %} is-invalid{% endif %}" id="{{ name }}" name="{{ name }}"
+                type="{{ kind }}" maxlength="{{ maximum }}" autocomplete="{{ autocomplete }}"
+                value="{{ values.get(name) or '' }}"{% if name != 'email' %} required{% endif %}
+                {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+            {% if errors.get(name) %}<p class="invalid-feedback" id="{{ name }}-error">{{ errors[name] }}</p>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{% macro password_fields(required=true) %}
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="password">New password</label>
+            <input class="form-control" id="password" name="password" type="password" autocomplete="new-password"
+                   minlength="15" maxlength="128" aria-describedby="password-help"{% if required %} required{% endif %}>
+            <p class="form-text mb-0" id="password-help">15–128 characters.</p>
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="confirm_password">Confirm new password</label>
+            <input class="form-control" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password"
+                   minlength="15" maxlength="128"{% if required %} required{% endif %}>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro pagination(url, page, pages) %}
+    {% if pages > 1 %}
+        <nav class="records-pagination" aria-label="Record pages">
+            <span>Page {{ "{:,}".format(page) }} of {{ "{:,}".format(pages) }}</span>
+            <div class="pagination-links">
+                {% if page > 1 %}
+                    <a class="btn btn-outline-secondary" rel="prev" href="{{ url.include_query_params(page=page-1) }}">Previous</a>
+                {% endif %}
+                {% if page < pages %}
+                    <a class="btn btn-outline-secondary" rel="next" href="{{ url.include_query_params(page=page+1) }}">Next</a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
+{% endmacro %}
+
+{% macro form_field(name, fields, lengths, options, values, errors, type='text', width=4) %}
+    {% set field = fields[name] %}
+    {% set value = values.get(name) %}
+    {% set error = errors.get(name) %}
+    <div class="col-12 col-md-{{ width }}">
+        <label class="form-label" for="{{ name }}">
+            {{ field.title }}{% if not field.is_required() %} <span class="optional">optional</span>{% endif %}
+        </label>
+        {% if name in options %}
+            <select class="form-select{% if error %} is-invalid{% endif %}" id="{{ name }}" name="{{ name }}"
+                    {% if field.is_required() %}required{% endif %}
+                    {% if error %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+                {% if field.is_required() %}
+                    <option value="" disabled{% if value is none or value == '' or error %} selected{% endif %}>Select {{ field.title|lower }}</option>
+                {% else %}
+                    <option value="">None</option>
+                {% endif %}
+                {% for key, label in options[name] %}
+                    <option value="{{ key }}"{% if value is not none and value|string == key|string %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        {% else %}
+            <input class="form-control{% if error %} is-invalid{% endif %}" type="{{ type }}" id="{{ name }}"
+                   name="{{ name }}" value="{{ value if value is not none else '' }}"
+                   {% if lengths[name] %}maxlength="{{ lengths[name] }}"{% endif %}
+                   {% if field.is_required() %}required{% endif %}
+                   {% if error %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+        {% endif %}
+        {% if error %}<p class="invalid-feedback" id="{{ name }}-error">{{ error }}</p>{% endif %}
+    </div>
+{% endmacro %}

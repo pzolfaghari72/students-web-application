@@ -1,0 +1,17 @@
+﻿SchemaName,TableName,ApproximateRowCount,ReservedSizeMB,UsedSizeMB,CreateDate,ModifyDate
+dbo,Applicants,600000,93.007812,92.8125,10:11.8,11:09.3
+dbo,ClassStandings,6,0.015625,0.015625,54:58.7,54:58.8
+dbo,CourseEnrollments,3724654,93.945312,93.929687,54:58.7,39:08.5
+dbo,CourseOfferings,59279,2.320312,2.257812,54:58.7,24:54.5
+dbo,Courses,180,0.132812,0.078125,54:58.8,47:12.7
+dbo,DegreeLevels,2,0.015625,0.015625,54:58.8,54:58.8
+dbo,DegreeRequirements,364,0.078125,0.03125,54:58.8,05:49.5
+dbo,Degrees,20,0.015625,0.015625,05:49.4,05:49.5
+dbo,DegreeTypes,3,0.015625,0.015625,54:58.8,05:49.5
+dbo,Departments,11,0.015625,0.015625,54:58.8,05:49.5
+dbo,Grades,6,0.015625,0.015625,54:58.8,54:58.8
+dbo,Sessions,3,0.015625,0.015625,54:58.8,54:58.8
+dbo,StudentProfiles,119463,2.007812,1.976562,14:59.5,14:59.5
+dbo,Students,119463,29.320312,29.273437,54:58.8,05:49.5
+dbo,sysdiagrams,1,0.203125,0.117187,15:53.6,15:53.6
+dbo,Terms,33,0.015625,0.015625,54:58.8,10:11.8

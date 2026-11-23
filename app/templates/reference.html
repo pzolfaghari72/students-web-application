@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from "macros.html" import pagination %}
+{% block title %}{{ reference.title }}{% endblock %}
+{% block content %}
+{% set admin = current_user.role == 'Admin' %}
+{% set list_url = url_for('reference_page', entity=entity) %}
+{% set selected_url = list_url.include_query_params(**selected) if selected else list_url %}
+<header class="page-header">
+    <div>
+        <h1>{{ reference.title }}</h1>
+        {% if admin and not selected %}<p>Select a row in the table to update or delete a {{ reference.singular }}.</p>{% endif %}
+    </div>
+</header>
+
+{% if notice %}<div class="alert alert-success" role="status">{{ notice }}</div>{% endif %}
+{% if message or errors %}<div class="alert alert-danger" role="alert">{{ message or 'Review the highlighted fields.' }}</div>{% endif %}
+{% if admin %}
+<form class="panel student-form" id="reference-form" method="post" action="{{ selected_url }}">
+    <fieldset class="form-section">
+        <legend>{{ 'Edit ' if selected else 'New ' }}{{ reference.singular }}</legend>
+        {% if selected and reference.generated_id_label %}
+            <p class="text-body-secondary">{{ reference.generated_id_label }} {{ selected.code }}</p>
+        {% endif %}
+        <div class="row g-3">
+            {% for key, field in fields.items() %}
+                {% set error = errors.get(key) %}
+                {% set value = values.get(key, none if field.is_required() else field.default) %}
+                {% set limit = field.metadata|selectattr('max_length', 'defined')|map(attribute='max_length')|first %}
+                {% set minimum = field.metadata|selectattr('ge', 'defined')|map(attribute='ge')|first %}
+                {% set maximum = field.metadata|selectattr('le', 'defined')|map(attribute='le')|first %}
+                <div class="{{ 'col-12' if key == 'description' else 'col-12 col-md-6' }}">
+                    <label class="form-label" for="{{ key }}">{{ field.title }}{% if not field.is_required() %} <span class="optional">optional</span>{% endif %}</label>
+                    {% if selected and key in reference.keys %}
+                        <input class="form-control" id="{{ key }}" value="{{ value }}" readonly>
+                    {% elif key in options %}
+                        <select class="form-select{% if error %} is-invalid{% endif %}" id="{{ key }}" name="{{ key }}"{% if field.is_required() %} required{% endif %}
+                                {% if error %}aria-invalid="true" aria-describedby="{{ key }}-error"{% endif %}>
+                            {% if field.default is none %}
+                                <option value=""{% if value is none or value == '' %} selected{% endif %}>None</option>
+                            {% elif field.is_required() %}
+                                <option value="" disabled{% if value is none or value == '' or error %} selected{% endif %}>Select {{ field.title|lower }}</option>
+                            {% endif %}
+                            {% for option, label in options[key] %}
+                                <option value="{{ option }}"{% if not error and option|upper == value|string|upper %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elif key == 'description' %}
+                        <textarea class="form-control{% if error %} is-invalid{% endif %}" id="{{ key }}" name="{{ key }}" rows="3"
+                                  maxlength="512"{% if error %} aria-invalid="true" aria-describedby="{{ key }}-error"{% endif %}>{{ value or '' }}</textarea>
+                    {% else %}
+                        <input class="form-control{% if error %} is-invalid{% endif %}" id="{{ key }}" name="{{ key }}"
+                               type="{{ input_types[key] }}"
+                               {% if key in steps %}step="{{ steps[key] }}"{% endif %}
+                               {% if minimum is defined %}min="{{ minimum }}"{% endif %}
+                               {% if maximum is defined %}max="{{ maximum }}"{% endif %}
+                               value="{{ value if value is not none else '' }}"{% if limit is defined %} maxlength="{{ limit }}"{% endif %}
+                               {% if field.is_required() %}required{% endif %}
+                               {% if error %}aria-invalid="true" aria-describedby="{{ key }}-error"{% endif %}>
+                    {% endif %}
+                    {% if error %}<p class="invalid-feedback" id="{{ key }}-error">{{ error }}</p>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </fieldset>
+    <div class="form-actions">
+        <button class="btn btn-success" type="{{ 'button' if selected else 'submit' }}"{% if selected %} disabled{% endif %}>Insert</button>
+        <button class="btn btn-warning" type="{{ 'submit' if selected else 'button' }}"{% if not selected %} disabled{% endif %}>Update</button>
+        {% if selected %}
+            <a class="btn btn-danger" href="{{ url_for('confirm_reference_delete', entity=entity).include_query_params(**selected) }}">Delete</a>
+        {% else %}
+            <button class="btn btn-danger" type="button" disabled>Delete</button>
+        {% endif %}
+        <button class="btn btn-dark" type="submit" form="clear-record">Clear</button>
+    </div>
+</form>
+<form id="clear-record" method="get" action="{{ list_url }}" hidden>
+    <input type="hidden" name="q" value="{{ q }}">
+    <input type="hidden" name="page" value="{{ page }}">
+</form>
+{% endif %}
+
+<section class="management-records" aria-labelledby="reference-table-heading">
+    <h2 id="reference-table-heading">{{ reference.title }} records</h2>
+    <form class="panel compact-search" method="get" action="{{ list_url }}#reference-table-heading" role="search">
+        <label class="form-label" for="q">Search {{ reference.title|lower }}</label>
+        <input class="form-control" type="search" id="q" name="q" value="{{ q }}" maxlength="100"
+               {% if reference.search_placeholder %}placeholder="{{ reference.search_placeholder }}"{% endif %}>
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a class="btn btn-outline-secondary" href="{{ list_url }}#reference-table-heading">Clear search</a>
+    </form>
+    <div class="panel">
+        <div class="records-summary"><strong>{{ "{:,}".format(total) }}</strong> records</div>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="{{ reference.title }} table">
+            <table class="table summary-table{% if columns|length > 8 %} management-table{% endif %} align-middle mb-0">
+                <thead><tr>{% for label in columns.values() %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                    {% for record, key in rows %}
+                    <tr{% if admin %} data-select-record{% endif %}{% if key == selected %} class="record-selected"{% endif %}>
+                        {% for name in columns %}
+                            {% set value = record|attr(name) %}
+                            {% if loop.first %}
+                                <th scope="row">
+                                    {% if admin %}
+                                        <a class="student-link" data-record-link href="{{ list_url.include_query_params(q=q, page=page, **key) }}#reference-form"
+                                           aria-label="Select {{ reference.singular }} {{ key.code }}{% if key.number is defined %} {{ key.number }}{% endif %}"{% if key == selected %} aria-current="true"{% endif %}>
+                                            {{ value }}
+                                            <span class="record-select-label">{{ 'Selected' if key == selected else 'Select' }}</span>
+                                        </a>
+                                    {% else %}{{ value }}{% endif %}
+                                </th>
+                            {% else %}
+                                <td>{% if value is boolean %}{{ 'Yes' if value else 'No' }}{% else %}{{ value if value is not none else '—' }}{% endif %}</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="{{ columns|length }}">No records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {{ pagination(list_url.include_query_params(q=q), page, pages) }}
+    </div>
+</section>
+{% if admin %}<script src="{{ url_for('static', path='record-selection.js') }}" defer></script>{% endif %}
+{% endblock %}

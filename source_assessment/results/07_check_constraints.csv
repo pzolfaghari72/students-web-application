@@ -1,0 +1,9 @@
+﻿SchemaName,TableName,ConstraintName,ConstraintDefinition,IsDisabled,IsNotTrusted
+dbo,Applicants,ck_applications_gender,([gender]='F' OR [gender]='M'),0,0
+dbo,Applicants,ck_applications_gpa,([gpa]>=(0.0) AND [gpa]<=(4.0)),0,0
+dbo,Applicants,ck_appls_sat_math_score,([SatMathScore]>=(200) AND [SatMathScore]<=(800)),0,0
+dbo,Applicants,ck_appls_sat_reading_score,([SatReadingScore]>=(200) AND [SatReadingScore]<=(800)),0,0
+dbo,Applicants,ck_appls_sat_writing_score,([SatWritingScore]>=(200) AND [SatWritingScore]<=(800)),0,0
+dbo,CourseOfferings,ck_course_offerings_capacity,([Capacity]>(0) AND [capacity]<(1000)),0,0
+dbo,Courses,ck_CourseNumber,([CourseNumber]>=(9) AND [CourseNumber]<=(1000)),0,0
+dbo,Terms,ck_year,([Year]>=(1990) AND [Year]<=(2050)),0,0
